@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en" class="light scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Service Hub | DIGIFARMHELP</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Poppins:wght@500;600;700;800&family=Noto+Sans+Kannada:wght@400;500;700&family=Noto+Sans+Devanagari:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: { DEFAULT: '#16a34a', dark: '#14532d', light: '#dcfce7' },
+                        darkBg: '#0f172a',
+                        cardDark: '#1e293b',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'Noto Sans Kannada', 'Noto Sans Devanagari', 'sans-serif'],
+                        heading: ['Poppins', 'Noto Sans Kannada', 'Noto Sans Devanagari', 'sans-serif'],
+                    },
+                    animation: {
+                        'pulse-fast': 'pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'slide-in': 'slideIn 0.3s ease-out forwards',
+                    },
+                    keyframes: {
+                        slideIn: { '0%': { opacity: '0', transform: 'translateY(-10px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        .mic-wave { position: absolute; width: 100%; height: 100%; border-radius: 50%; border: 2px solid #16a34a; opacity: 0; z-index: -1; }
+        .listening .mic-wave { animation: ripple 1.5s infinite; }
+        @keyframes ripple { 0% { transform: scale(1); opacity: 0.8; } 100% { transform: scale(2.5); opacity: 0; } }
+        
+        .card-hover:hover { transform: translateY(-5px); box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1); }
+        .card-img-grad { background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 100%); }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900 dark:bg-darkBg dark:text-slate-100 transition-colors duration-300">
+
+    <div id="voice-overlay" class="fixed inset-0 z-[60] bg-black/90 backdrop-blur-md hidden flex-col items-center justify-center transition-all">
+        <div class="absolute top-10 flex gap-4 bg-white/10 p-2 rounded-full border border-white/20">
+            <button onclick="setVoiceLang('en-US')" id="v-en" class="px-4 py-2 rounded-full text-sm font-bold bg-brand text-white transition-all">English</button>
+            <button onclick="setVoiceLang('hi-IN')" id="v-hi" class="px-4 py-2 rounded-full text-sm font-bold text-slate-400 hover:text-white transition-all">हिंदी (Hindi)</button>
+            <button onclick="setVoiceLang('kn-IN')" id="v-kn" class="px-4 py-2 rounded-full text-sm font-bold text-slate-400 hover:text-white transition-all">ಕನ್ನಡ (Kannada)</button>
+        </div>
+
+        <div class="relative w-24 h-24 flex items-center justify-center bg-white rounded-full mb-8 listening">
+            <div class="mic-wave"></div><div class="mic-wave" style="animation-delay: 0.5s"></div>
+            <i class="fa-solid fa-microphone text-4xl text-brand animate-pulse"></i>
+        </div>
+        <h2 class="text-white text-2xl font-heading font-bold mb-2" data-i18n="voiceTitle">I'm Listening...</h2>
+        <p class="text-slate-400 text-sm mb-8" data-i18n="voiceSub">Try saying: "Loan", "Mandi Bhav", or "Tractor"</p>
+        <p id="voice-result" class="text-brand font-bold text-xl min-h-[30px]"></p>
+        <button onclick="stopVoice()" class="mt-8 text-white underline text-sm" data-i18n="voiceCancel">Cancel</button>
+    </div>
+
+    <nav class="sticky top-0 z-40 bg-white/95 dark:bg-darkBg/95 backdrop-blur border-b border-slate-200 dark:border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 h-20 flex justify-between items-center">
+            
+            <a href="index.html" class="flex items-center gap-3">
+                <img src="logo.png" alt="Logo" class="w-10 h-10 rounded-lg object-contain" onerror="this.src='https://placehold.co/40x40/16a34a/white?text=D'">
+                <h1 class="font-heading font-bold text-xl tracking-tight hidden lg:block">DIGI<span class="text-brand">FARM</span>HELP</h1>
+            </a>
+            
+            <div class="flex-1 max-w-md mx-4 relative hidden md:block">
+                <i class="fa-solid fa-search absolute left-4 top-3.5 text-slate-400"></i>
+                <input type="text" id="service-search" onkeyup="filterServices()" placeholder="Search services..." 
+                       class="w-full bg-slate-100 dark:bg-slate-800 border-none rounded-full py-3 pl-12 pr-4 focus:ring-2 focus:ring-brand outline-none transition-all text-sm">
+            </div>
+
+            <div class="hidden md:flex items-center gap-3">
+                <div class="flex items-center bg-slate-100 dark:bg-slate-800 rounded-full p-1 border border-slate-200 dark:border-slate-700 mr-2">
+                    <button onclick="setLang('en')" id="btn-en" class="px-3 py-1 rounded-full text-xs font-bold bg-white shadow text-brand transition-all">EN</button>
+                    <button onclick="setLang('hi')" id="btn-hi" class="px-3 py-1 rounded-full text-xs font-bold text-slate-500 hover:text-brand transition-all">HI</button>
+                    <button onclick="setLang('kn')" id="btn-kn" class="px-3 py-1 rounded-full text-xs font-bold text-slate-500 hover:text-brand transition-all">KN</button>
+                </div>
+
+                <button onclick="startVoice()" class="w-10 h-10 rounded-full bg-brand text-white shadow-lg shadow-green-500/30 hover:scale-110 transition-transform flex items-center justify-center">
+                    <i class="fa-solid fa-microphone text-sm"></i>
+                </button>
+                <button onclick="toggleTheme()" class="w-10 h-10 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center transition-colors">
+                    <i class="fa-solid fa-moon dark:hidden"></i><i class="fa-solid fa-sun hidden dark:block text-yellow-400"></i>
+                </button>
+            </div>
+
+            <button class="md:hidden text-slate-700 dark:text-white text-2xl" onclick="toggleMobileMenu()">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+        </div>
+
+        <div id="mobile-menu" class="hidden md:hidden bg-white dark:bg-cardDark border-t border-slate-200 dark:border-slate-800 absolute w-full left-0 top-20 shadow-xl px-4 py-6 flex flex-col gap-6 animate-slide-in">
+            <div class="flex items-center justify-between">
+                <span class="text-sm font-bold text-slate-500 uppercase tracking-wider">Language</span>
+                <div class="flex items-center bg-slate-100 dark:bg-slate-800 rounded-full p-1 border border-slate-200 dark:border-slate-700">
+                    <button onclick="setLang('en')" id="mob-btn-en" class="px-4 py-2 rounded-full text-xs font-bold bg-white shadow text-brand transition-all">EN</button>
+                    <button onclick="setLang('hi')" id="mob-btn-hi" class="px-4 py-2 rounded-full text-xs font-bold text-slate-500 hover:text-brand transition-all">HI</button>
+                    <button onclick="setLang('kn')" id="mob-btn-kn" class="px-4 py-2 rounded-full text-xs font-bold text-slate-500 hover:text-brand transition-all">KN</button>
+                </div>
+            </div>
+            
+             <div class="relative">
+                <i class="fa-solid fa-search absolute left-4 top-3.5 text-slate-400"></i>
+                <input type="text" id="mob-search" onkeyup="filterServices()" placeholder="Search..." class="w-full bg-slate-100 dark:bg-slate-800 border-none rounded-xl py-3 pl-12 pr-4 outline-none">
+            </div>
+        </div>
+    </nav>
+
+    <header class="py-12 bg-slate-900 text-white relative overflow-hidden">
+        <div class="absolute inset-0 opacity-40 bg-[url('https://images.unsplash.com/photo-1625246333195-5519a49d75f0?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center"></div>
+        <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/80 to-transparent"></div>
+        <div class="max-w-7xl mx-auto px-4 relative z-10 text-center">
+            <h1 class="text-4xl md:text-5xl font-heading font-bold mb-4">
+                <span data-i18n="heroTitle1">All</span> <span class="text-brand" data-i18n="heroTitle2">Services</span>
+            </h1>
+            <p class="text-slate-300 max-w-2xl mx-auto" data-i18n="heroDesc">Access 20+ Digital India farming tools. Manage crops, finances, and labor.</p>
+            
+            <div class="flex flex-wrap justify-center gap-2 mt-8" id="category-filters">
+                <button onclick="filterCat('all')" class="cat-btn active px-4 py-2 rounded-full text-xs font-bold bg-brand text-white transition-all" data-i18n="catAll">All</button>
+                <button onclick="filterCat('market')" class="cat-btn px-4 py-2 rounded-full text-xs font-bold bg-white/10 hover:bg-white/20 text-white transition-all" data-i18n="catMarket">Market</button>
+                <button onclick="filterCat('finance')" class="cat-btn px-4 py-2 rounded-full text-xs font-bold bg-white/10 hover:bg-white/20 text-white transition-all" data-i18n="catFinance">Finance</button>
+                <button onclick="filterCat('labor')" class="cat-btn px-4 py-2 rounded-full text-xs font-bold bg-white/10 hover:bg-white/20 text-white transition-all" data-i18n="catLabor">Labor</button>
+                <button onclick="filterCat('smart')" class="cat-btn px-4 py-2 rounded-full text-xs font-bold bg-white/10 hover:bg-white/20 text-white transition-all" data-i18n="catSmart">Smart Farm</button>
+            </div>
+        </div>
+    </header>
+
+    <section class="py-12 px-4 max-w-7xl mx-auto min-h-screen">
+        <div id="services-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            
+            <div class="service-card group bg-white dark:bg-cardDark rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-700 card-hover transition-all cursor-pointer shadow-sm" data-cat="market" data-keywords="price cost rate mandi market bhav">
+                <div class="h-40 overflow-hidden relative">
+                    <img src="lmcard1.png" alt="Price" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" onerror="this.src='https://images.unsplash.com/photo-1605000797499-95a51c5269ae?auto=format&fit=crop&w=400'">
+                    <div class="absolute inset-0 card-img-grad"></div>
+                    <span class="absolute bottom-3 left-4 text-white font-bold text-lg drop-shadow-md flex items-center"><i class="fa-solid fa-arrow-trend-up mr-2 text-green-400"></i><span data-i18n="s1Title">Live Pricing</span></span>
+                </div>
+                <div class="p-5">
+                    <p class="text-sm text-slate-500 dark:text-slate-400" data-i18n="s1Desc">Real-time Mandi rates (World & State-wise).</p>
+                </div>
+            </div>
+
+            <div class="service-card group bg-white dark:bg-cardDark rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-700 card-hover transition-all cursor-pointer shadow-sm" data-cat="market" data-keywords="sell buy merchant pickup bechna">
+                <div class="h-40 overflow-hidden relative">
+                    <img src="lmcard2.png" alt="Sell" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" onerror="this.src='https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&w=400'">
+                    <div class="absolute inset-0 card-img-grad"></div>
+                    <span class="absolute bottom-3 left-4 text-white font-bold text-lg drop-shadow-md flex items-center"><i class="fa-solid fa-hand-holding-dollar mr-2 text-blue-400"></i><span data-i18n="s2Title">Sell Direct</span></span>
+                </div>
+                <div class="p-5">
+                    <p class="text-sm text-slate-500 dark:text-slate-400" data-i18n="s2Desc">Our team collects from your farm. Instant cash.</p>
+                </div>
+            </div>
+
+            <div class="service-card group bg-white dark:bg-cardDark rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-700 card-hover transition-all cursor-pointer shadow-sm" data-cat="smart" data-keywords="predict ai grow profit bhavishya">
+                <div class="h-40 overflow-hidden relative">
+                    <img src="lmcard3.png" alt="AI" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" onerror="this.src='https://images.unsplash.com/photo-1555664424-778a1e5e1b48?auto=format&fit=crop&w=400'">
+                    <div class="absolute inset-0 card-img-grad"></div>
+                    <span class="absolute bottom-3 left-4 text-white font-bold text-lg drop-shadow-md flex items-center"><i class="fa-solid fa-brain mr-2 text-purple-400"></i><span data-i18n="s3Title">Crop AI</span></span>
+                </div>
+                <div class="p-5">
+                    <p class="text-sm text-slate-500 dark:text-slate-400" data-i18n="s3Desc">Know what to grow for max profit based on data.</p>
+                </div>
+            </div>
+
+            <div class="service-card group bg-white dark:bg-cardDark rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-700 card-hover transition-all cursor-pointer shadow-sm" data-cat="smart" data-keywords="weather rain forecast mausam">
+                <div class="h-40 overflow-hidden relative">
+                    <img src="lmcard4.png" alt="Weather" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" onerror="this.src='https://images.unsplash.com/photo-1592210454359-9043f067919b?auto=format&fit=crop&w=400'">
+                    <div class="absolute inset-0 card-img-grad"></div>
+                    <span class="absolute bottom-3 left-4 text-white font-bold text-lg drop-shadow-md flex items-center"><i class="fa-solid fa-cloud-sun-rain mr-2 text-yellow-400"></i><span data-i18n="s4Title">Weather</span></span>
+                </div>
+                <div class="p-5">
+                    <p class="text-sm text-slate-500 dark:text-slate-400" data-i18n="s4Desc">Hyper-local forecasts. Rain alerts for spraying.</p>
+                </div>
+            </div>
+
+            <div class="service-card group bg-white dark:bg-cardDark rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-700 card-hover transition-all cursor-pointer shadow-sm" data-cat="labor" data-keywords="job work labor freelance mazdoor">
+                <div class="h-40 overflow-hidden relative">
+                    <img src="lmcard5.png" alt="Labor" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" onerror="this.src='https://images.unsplash.com/photo-1595245842526-72433e38101a?auto=format&fit=crop&w=400'">
+                    <div class="absolute inset-0 card-img-grad"></div>
+                    <span class="absolute bottom-3 left-4 text-white font-bold text-lg drop-shadow-md flex items-center"><i class="fa-solid fa-users-gear mr-2 text-orange-400"></i><span data-i18n="s5Title">Join Labor Team</span></span>
+                </div>
+                <div class="p-5">
+                    <p class="text-sm text-slate-500 dark:text-slate-400" data-i18n="s5Desc">Work as a freelancer. Join organized squads.</p>
+                </div>
+            </div>
+
+            <div class="service-card group bg-white dark:bg-cardDark rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-700 card-hover transition-all cursor-pointer shadow-sm" data-cat="labor" data-keywords="rent tractor hire tool equipment kiraya">
+                <div class="h-40 overflow-hidden relative">
+                    <img src="lmcard6.png" alt="Tractor" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" onerror="this.src='https://images.unsplash.com/photo-1530267981375-2734035bd5f8?auto=format&fit=crop&w=400'">
+                    <div class="absolute inset-0 card-img-grad"></div>
+                    <span class="absolute bottom-3 left-4 text-white font-bold text-lg drop-shadow-md flex items-center"><i class="fa-solid fa-tractor mr-2 text-red-400"></i><span data-i18n="s6Title">Rent Tools</span></span>
+                </div>
+                <div class="p-5">
+                    <p class="text-sm text-slate-500 dark:text-slate-400" data-i18n="s6Desc">Book tractors with/without drivers.</p>
+                </div>
+            </div>
+
+            <div class="service-card group bg-white dark:bg-cardDark rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-700 card-hover transition-all cursor-pointer shadow-sm" data-cat="labor" data-keywords="water borewell repair motor drill paani">
+                <div class="h-40 overflow-hidden relative">
+                    <img src="lmcard7.png" alt="Borewell" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" onerror="this.src='https://images.unsplash.com/photo-1519638831568-d9897f54ed69?auto=format&fit=crop&w=400'">
+                    <div class="absolute inset-0 card-img-grad"></div>
+                    <span class="absolute bottom-3 left-4 text-white font-bold text-lg drop-shadow-md flex items-center"><i class="fa-solid fa-water mr-2 text-cyan-400"></i><span data-i18n="s7Title">Borewell</span></span>
+                </div>
+                <div class="p-5">
+                    <p class="text-sm text-slate-500 dark:text-slate-400" data-i18n="s7Desc">New drilling or repair appointments.</p>
+                </div>
+            </div>
+
+            <div class="service-card group bg-white dark:bg-cardDark rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-700 card-hover transition-all cursor-pointer shadow-sm" data-cat="smart" data-keywords="shop buy fertilizer iot device store khad">
+                <div class="h-40 overflow-hidden relative">
+                    <img src="lmcard8.png" alt="Store" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" onerror="this.src='https://images.unsplash.com/photo-1628519592415-316279c14828?auto=format&fit=crop&w=400'">
+                    <div class="absolute inset-0 card-img-grad"></div>
+                    <span class="absolute bottom-3 left-4 text-white font-bold text-lg drop-shadow-md flex items-center"><i class="fa-solid fa-cart-shopping mr-2 text-emerald-400"></i><span data-i18n="s8Title">Agri-Store</span></span>
+                </div>
+                <div class="p-5">
+                    <p class="text-sm text-slate-500 dark:text-slate-400" data-i18n="s8Desc">Buy IoT sensors, fertilizers, and seeds.</p>
+                </div>
+            </div>
+
+             <div class="service-card group bg-white dark:bg-cardDark rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-700 card-hover transition-all cursor-pointer shadow-sm" data-cat="smart" data-keywords="remote control motor phone automatic moisture mobile">
+                <div class="h-40 overflow-hidden relative">
+                    <img src="lmcard9.png" alt="IoT" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" onerror="this.src='https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=400'">
+                    <div class="absolute inset-0 card-img-grad"></div>
+                    <span class="absolute bottom-3 left-4 text-white font-bold text-lg drop-shadow-md flex items-center"><i class="fa-solid fa-mobile-screen-button mr-2 text-slate-300"></i><span data-i18n="s9Title">Smart Control</span></span>
+                </div>
+                <div class="p-5">
+                    <p class="text-sm text-slate-500 dark:text-slate-400" data-i18n="s9Desc">Turn motor ON/OFF remotely. Soil moisture data.</p>
+                </div>
+            </div>
+
+            <div class="service-card group bg-white dark:bg-cardDark rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-700 card-hover transition-all cursor-pointer shadow-sm" data-cat="finance" data-keywords="loan kcc bank money credit udhar saala">
+                <div class="h-40 overflow-hidden relative">
+                    <img src="lmcard10.png" alt="Loan" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" onerror="this.src='https://plus.unsplash.com/premium_photo-1664474619075-644dd191935f?auto=format&fit=crop&w=400'">
+                    <div class="absolute inset-0 card-img-grad"></div>
+                    <span class="absolute bottom-3 left-4 text-white font-bold text-lg drop-shadow-md flex items-center"><i class="fa-solid fa-credit-card mr-2 text-yellow-400"></i><span data-i18n="s10Title">KCC Loans</span></span>
+                </div>
+                <div class="p-5">
+                    <p class="text-sm text-slate-500 dark:text-slate-400" data-i18n="s10Desc">Link KCC. Instant credit transfer to bank.</p>
+                </div>
+            </div>
+
+             <div class="service-card group bg-white dark:bg-cardDark rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-700 card-hover transition-all cursor-pointer shadow-sm" data-cat="smart" data-keywords="soil test lab report acid urea mitti">
+                <div class="h-40 overflow-hidden relative">
+                    <img src="lmcard11.png" alt="Soil" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" onerror="this.src='https://images.unsplash.com/photo-1535498730771-e735b998cd64?auto=format&fit=crop&w=400'">
+                    <div class="absolute inset-0 card-img-grad"></div>
+                    <span class="absolute bottom-3 left-4 text-white font-bold text-lg drop-shadow-md flex items-center"><i class="fa-solid fa-flask mr-2 text-amber-500"></i><span data-i18n="s11Title">Soil Lab</span></span>
+                </div>
+                <div class="p-5">
+                    <p class="text-sm text-slate-500 dark:text-slate-400" data-i18n="s11Desc">Home collection. Digital report in 24h.</p>
+                </div>
+            </div>
+
+            <div class="service-card group bg-white dark:bg-cardDark rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-700 card-hover transition-all cursor-pointer shadow-sm" data-cat="market" data-keywords="store cold warehouse keep godam">
+                <div class="h-40 overflow-hidden relative">
+                    <img src="lmcard12.png" alt="Storage" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" onerror="this.src='https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=400'">
+                    <div class="absolute inset-0 card-img-grad"></div>
+                    <span class="absolute bottom-3 left-4 text-white font-bold text-lg drop-shadow-md flex items-center"><i class="fa-solid fa-snowflake mr-2 text-teal-400"></i><span data-i18n="s12Title">Cold Storage</span></span>
+                </div>
+                <div class="p-5">
+                    <p class="text-sm text-slate-500 dark:text-slate-400" data-i18n="s12Desc">Price low? Store produce in nearby warehouses.</p>
+                </div>
+            </div>
+
+            <div class="service-card group bg-white dark:bg-cardDark rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-700 card-hover transition-all cursor-pointer shadow-sm" data-cat="market" data-keywords="cow buffalo cattle animal vet doctor milk pashu">
+                <div class="h-40 overflow-hidden relative">
+                    <img src="lmcard13.png" alt="Cattle" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" onerror="this.src='https://images.unsplash.com/photo-1596733430282-7477530d2098?auto=format&fit=crop&w=400'">
+                    <div class="absolute inset-0 card-img-grad"></div>
+                    <span class="absolute bottom-3 left-4 text-white font-bold text-lg drop-shadow-md flex items-center"><i class="fa-solid fa-cow mr-2 text-pink-400"></i><span data-i18n="s13Title">Pashu Mela</span></span>
+                </div>
+                <div class="p-5">
+                    <p class="text-sm text-slate-500 dark:text-slate-400" data-i18n="s13Desc">Buy/Sell livestock. Vet video consultation.</p>
+                </div>
+            </div>
+
+             <div class="service-card group bg-white dark:bg-cardDark rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-700 card-hover transition-all cursor-pointer shadow-sm" data-cat="finance" data-keywords="contract company agreement lays bond samvida">
+                <div class="h-40 overflow-hidden relative">
+                    <img src="lmcard14.png" alt="Contract" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" onerror="this.src='https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=400'">
+                    <div class="absolute inset-0 card-img-grad"></div>
+                    <span class="absolute bottom-3 left-4 text-white font-bold text-lg drop-shadow-md flex items-center"><i class="fa-solid fa-file-signature mr-2 text-indigo-400"></i><span data-i18n="s14Title">Contract Farm</span></span>
+                </div>
+                <div class="p-5">
+                    <p class="text-sm text-slate-500 dark:text-slate-400" data-i18n="s14Desc">Sign digital contracts with brands for fixed price.</p>
+                </div>
+            </div>
+
+             <div class="service-card group bg-white dark:bg-cardDark rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-700 card-hover transition-all cursor-pointer shadow-sm" data-cat="finance" data-keywords="insurance claim flood damage fasal bima bima">
+                <div class="h-40 overflow-hidden relative">
+                    <img src="lmcard15.png" alt="Insurance" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" onerror="this.src='https://images.unsplash.com/photo-1544253930-b9df7289524e?auto=format&fit=crop&w=400'">
+                    <div class="absolute inset-0 card-img-grad"></div>
+                    <span class="absolute bottom-3 left-4 text-white font-bold text-lg drop-shadow-md flex items-center"><i class="fa-solid fa-shield-halved mr-2 text-rose-400"></i><span data-i18n="s15Title">Fasal Bima</span></span>
+                </div>
+                <div class="p-5">
+                    <p class="text-sm text-slate-500 dark:text-slate-400" data-i18n="s15Desc">1-Click Insurance. Auto-claim on flood/hail.</p>
+                </div>
+            </div>
+
+            <div class="service-card group bg-white dark:bg-cardDark rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-700 card-hover transition-all cursor-pointer shadow-sm" data-cat="finance" data-keywords="government scheme subsidy modi pm yojana">
+                <div class="h-40 overflow-hidden relative">
+                    <img src="lmcard16.png" alt="Scheme" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" onerror="this.src='https://images.unsplash.com/photo-1593113598332-cd288d649433?auto=format&fit=crop&w=400'">
+                    <div class="absolute inset-0 card-img-grad"></div>
+                    <span class="absolute bottom-3 left-4 text-white font-bold text-lg drop-shadow-md flex items-center"><i class="fa-solid fa-building-columns mr-2 text-orange-400"></i><span data-i18n="s16Title">Govt. Schemes</span></span>
+                </div>
+                <div class="p-5">
+                    <p class="text-sm text-slate-500 dark:text-slate-400" data-i18n="s16Desc">State & Central subsidies tailored to you.</p>
+                </div>
+            </div>
+
+            <div class="service-card group bg-white dark:bg-cardDark rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-700 card-hover transition-all cursor-pointer shadow-sm" data-cat="labor" data-keywords="truck transport move logistics gadi">
+                <div class="h-40 overflow-hidden relative">
+                    <img src="lmcard17.png" alt="Logistics" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" onerror="this.src='https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?auto=format&fit=crop&w=400'">
+                    <div class="absolute inset-0 card-img-grad"></div>
+                    <span class="absolute bottom-3 left-4 text-white font-bold text-lg drop-shadow-md flex items-center"><i class="fa-solid fa-truck-fast mr-2 text-gray-300"></i><span data-i18n="s17Title">Logistics</span></span>
+                </div>
+                <div class="p-5">
+                    <p class="text-sm text-slate-500 dark:text-slate-400" data-i18n="s17Desc">Book mini-trucks to move crop or equipment.</p>
+                </div>
+            </div>
+
+            <div class="service-card group bg-white dark:bg-cardDark rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-700 card-hover transition-all cursor-pointer shadow-sm" data-cat="smart" data-keywords="chat social help expert question chaupal">
+                <div class="h-40 overflow-hidden relative">
+                    <img src="lmcard18.png" alt="Community" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" onerror="this.src='https://images.unsplash.com/photo-1573496130433-231422efd884?auto=format&fit=crop&w=400'">
+                    <div class="absolute inset-0 card-img-grad"></div>
+                    <span class="absolute bottom-3 left-4 text-white font-bold text-lg drop-shadow-md flex items-center"><i class="fa-solid fa-comments mr-2 text-lime-400"></i><span data-i18n="s18Title">Kisan Chaupal</span></span>
+                </div>
+                <div class="p-5">
+                    <p class="text-sm text-slate-500 dark:text-slate-400" data-i18n="s18Desc">Community forum. Expert answers via voice.</p>
+                </div>
+            </div>
+
+            <div class="service-card group bg-white dark:bg-cardDark rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-700 card-hover transition-all cursor-pointer shadow-sm" data-cat="labor" data-keywords="land rent lease field khet">
+                <div class="h-40 overflow-hidden relative">
+                    <img src="lmcard19.png" alt="Lease" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" onerror="this.src='https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=400'">
+                    <div class="absolute inset-0 card-img-grad"></div>
+                    <span class="absolute bottom-3 left-4 text-white font-bold text-lg drop-shadow-md flex items-center"><i class="fa-solid fa-map-location-dot mr-2 text-emerald-400"></i><span data-i18n="s19Title">Lease Land</span></span>
+                </div>
+                <div class="p-5">
+                    <p class="text-sm text-slate-500 dark:text-slate-400" data-i18n="s19Desc">Rent out your field or find land to cultivate.</p>
+                </div>
+            </div>
+
+             <div class="service-card group bg-white dark:bg-cardDark rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-700 card-hover transition-all cursor-pointer shadow-sm" data-cat="smart" data-keywords="power electricity light cut voltage bijli">
+                <div class="h-40 overflow-hidden relative">
+                    <img src="lmcard20.png" alt="Power" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" onerror="this.src='https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?auto=format&fit=crop&w=400'">
+                    <div class="absolute inset-0 card-img-grad"></div>
+                    <span class="absolute bottom-3 left-4 text-white font-bold text-lg drop-shadow-md flex items-center"><i class="fa-solid fa-bolt mr-2 text-yellow-400"></i><span data-i18n="s20Title">Power Schedule</span></span>
+                </div>
+                <div class="p-5">
+                    <p class="text-sm text-slate-500 dark:text-slate-400" data-i18n="s20Desc">Check electricity schedule for your transformer.</p>
+                </div>
+            </div>
+
+        </div>
+
+        <div id="no-results" class="hidden text-center py-12">
+            <i class="fa-solid fa-magnifying-glass text-4xl text-slate-300 mb-4"></i>
+            <p class="text-slate-500" data-i18n="noRes">No services found.</p>
+            <button onclick="filterCat('all')" class="text-brand font-bold mt-2" data-i18n="showAll">Show All</button>
+        </div>
+    </section>
+
+    <button onclick="startVoice()" class="fixed bottom-6 right-6 z-50 md:hidden w-16 h-16 bg-brand text-white rounded-full shadow-2xl flex items-center justify-center animate-bounce">
+        <i class="fa-solid fa-microphone text-2xl"></i>
+    </button>
+
+    <script>
+        // 1. Theme Logic
+        function toggleTheme() {
+            document.documentElement.classList.toggle('dark');
+            localStorage.theme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+        }
+        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        }
+
+        // 2. Mobile Menu Logic
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            menu.classList.toggle('hidden');
+        }
+
+        // 3. Category Filtering
+        function filterCat(cat) {
+            const cards = document.querySelectorAll('.service-card');
+            const btns = document.querySelectorAll('.cat-btn');
+            
+            btns.forEach(b => {
+                b.className = "cat-btn px-4 py-2 rounded-full text-xs font-bold bg-white/10 hover:bg-white/20 text-white transition-all";
+                if(b.textContent.toLowerCase().includes(cat) || (cat==='all' && b.getAttribute('data-i18n') === 'catAll')) {
+                    b.className = "cat-btn px-4 py-2 rounded-full text-xs font-bold bg-brand text-white transition-all shadow-lg scale-105";
+                }
+            });
+
+            cards.forEach(card => {
+                if (cat === 'all' || card.getAttribute('data-cat') === cat) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+
+        // 4. Search & Keyword Filtering
+        function filterServices() {
+            const query = document.getElementById('service-search').value.toLowerCase();
+            const cards = document.querySelectorAll('.service-card');
+            let hasResult = false;
+
+            cards.forEach(card => {
+                const title = card.querySelector('span') ? card.querySelector('span').textContent.toLowerCase() : '';
+                const keywords = card.getAttribute('data-keywords');
+                
+                if (keywords.includes(query) || title.includes(query)) {
+                    card.style.display = 'block';
+                    hasResult = true;
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+            document.getElementById('no-results').style.display = hasResult ? 'none' : 'block';
+        }
+
+        // 5. TRANSLATION & LANGUAGE LOGIC
+        const i18n = {
+            en: {
+                heroTitle1: "All", heroTitle2: "Services", heroDesc: "Access 20+ Digital India farming tools. Manage crops, finances, and labor.",
+                catAll: "All", catMarket: "Market", catFinance: "Finance", catLabor: "Labor", catSmart: "Smart Farm",
+                searchPH: "Search services...", noRes: "No services found.", showAll: "Show All",
+                voiceTitle: "I'm Listening...", voiceSub: "Try saying: 'Loan', 'Mandi Bhav', or 'Tractor'", voiceCancel: "Cancel",
+                
+                s1Title: "Live Pricing", s1Desc: "Real-time Mandi rates (World & State-wise).",
+                s2Title: "Sell Direct", s2Desc: "Our team collects from your farm. Instant cash.",
+                s3Title: "Crop AI", s3Desc: "Know what to grow for max profit based on data.",
+                s4Title: "Weather", s4Desc: "Hyper-local forecasts. Rain alerts for spraying.",
+                s5Title: "Join Labor Team", s5Desc: "Work as a freelancer. Join organized squads.",
+                s6Title: "Rent Tools", s6Desc: "Book tractors with/without drivers.",
+                s7Title: "Borewell", s7Desc: "New drilling or repair appointments.",
+                s8Title: "Agri-Store", s8Desc: "Buy IoT sensors, fertilizers, and seeds.",
+                s9Title: "Smart Control", s9Desc: "Turn motor ON/OFF remotely. Soil moisture data.",
+                s10Title: "KCC Loans", s10Desc: "Link KCC. Instant credit transfer to bank.",
+                s11Title: "Soil Lab", s11Desc: "Home collection. Digital report in 24h.",
+                s12Title: "Cold Storage", s12Desc: "Price low? Store produce in nearby warehouses.",
+                s13Title: "Pashu Mela", s13Desc: "Buy/Sell livestock. Vet video consultation.",
+                s14Title: "Contract Farm", s14Desc: "Sign digital contracts with brands for fixed price.",
+                s15Title: "Fasal Bima", s15Desc: "1-Click Insurance. Auto-claim on flood/hail.",
+                s16Title: "Govt. Schemes", s16Desc: "State & Central subsidies tailored to you.",
+                s17Title: "Logistics", s17Desc: "Book mini-trucks to move crop or equipment.",
+                s18Title: "Kisan Chaupal", s18Desc: "Community forum. Expert answers via voice.",
+                s19Title: "Lease Land", s19Desc: "Rent out your field or find land to cultivate.",
+                s20Title: "Power Schedule", s20Desc: "Check electricity schedule for your transformer."
+            },
+            hi: {
+                heroTitle1: "सभी", heroTitle2: "सेवाएं", heroDesc: "20+ डिजिटल इंडिया खेती उपकरण। फसल, वित्त और श्रम का प्रबंधन करें।",
+                catAll: "सभी", catMarket: "बाज़ार", catFinance: "वित्त", catLabor: "मज़दूर", catSmart: "स्मार्ट फार्म",
+                searchPH: "सेवाएं खोजें...", noRes: "कोई सेवा नहीं मिली।", showAll: "सभी देखें",
+                voiceTitle: "मैं सुन रहा हूँ...", voiceSub: "बोलें: 'लोन', 'मंडी भाव', या 'ट्रैक्टर'", voiceCancel: "रद्द करें",
+
+                s1Title: "मंडी भाव", s1Desc: "रियल-टाइम मंडी रेट (विश्व और राज्यवार)।",
+                s2Title: "सीधी बिक्री", s2Desc: "हमारी टीम खेत से फसल लेगी। तुरंत भुगतान।",
+                s3Title: "फसल सुझाव", s3Desc: "जानें क्या उगाएं ताकि अधिकतम मुनाफा हो।",
+                s4Title: "मौसम", s4Desc: "सटीक मौसम जानकारी। छिड़काव के लिए बारिश का अलर्ट।",
+                s5Title: "मजदूर बनें", s5Desc: "फ्रीलांसर के रूप में काम करें। टीम में शामिल हों।",
+                s6Title: "उपकरण किराए पर", s6Desc: "ड्राइवर के साथ/बिना ट्रैक्टर बुक करें।",
+                s7Title: "बोरवेल सेवा", s7Desc: "नई बोरिंग या मरम्मत के लिए बुकिंग।",
+                s8Title: "कृषि दुकान", s8Desc: "IoT सेंसर, खाद और बीज खरीदें।",
+                s9Title: "स्मार्ट कंट्रोल", s9Desc: "फोन से मोटर चालू/बंद करें। नमी की जांच।",
+                s10Title: "KCC लोन", s10Desc: "KCC लिंक करें। सीधे बैंक में लोन पाएं।",
+                s11Title: "मिट्टी जांच", s11Desc: "घर से सैंपल कलेक्शन। 24 घंटे में रिपोर्ट।",
+                s12Title: "कोल्ड स्टोरेज", s12Desc: "भाव कम हैं? पास के गोदाम में रखें।",
+                s13Title: "पशु मेला", s13Desc: "पशु खरीदें/बेचें। डॉक्टर से वीडियो सलाह।",
+                s14Title: "अनुबंध खेती", s14Desc: "फिक्स्ड रेट के लिए कंपनियों के साथ कॉन्ट्रैक्ट।",
+                s15Title: "फसल बीमा", s15Desc: "1-क्लिक बीमा। बाढ़ आने पर ऑटो-क्लेम।",
+                s16Title: "सरकारी योजनाएं", s16Desc: "आपके लिए राज्य और केंद्र की सब्सिडी।",
+                s17Title: "परिवहन", s17Desc: "फसल ले जाने के लिए मिनी-ट्रक बुक करें।",
+                s18Title: "किसान चौपाल", s18Desc: "सामुदायिक मंच। विशेषज्ञों से सवाल पूछें।",
+                s19Title: "खेत पट्टा", s19Desc: "अपना खेत किराए पर दें या खेती के लिए जमीन लें।",
+                s20Title: "बिजली शेड्यूल", s20Desc: "अपने ट्रांसफार्मर का बिजली शेड्यूल चेक करें।"
+            },
+            kn: {
+                heroTitle1: "ಎಲ್ಲಾ", heroTitle2: "ಸೇವೆಗಳು", heroDesc: "20+ ಡಿಜಿಟಲ್ ಇಂಡಿಯಾ ಕೃಷಿ ಉಪಕರಣಗಳು. ಬೆಳೆ, ಹಣಕಾಸು ಮತ್ತು ಕಾರ್ಮಿಕ ನಿರ್ವಹಣೆ.",
+                catAll: "ಎಲ್ಲಾ", catMarket: "ಮಾರುಕಟ್ಟೆ", catFinance: "ಹಣಕಾಸು", catLabor: "ಕಾರ್ಮಿಕ", catSmart: "ಸ್ಮಾರ್ಟ್ ಫಾರ್ಮ್",
+                searchPH: "ಸೇವೆಗಳನ್ನು ಹುಡುಕಿ...", noRes: "ಯಾವುದೇ ಸೇವೆ ಕಂಡುಬಂದಿಲ್ಲ.", showAll: "ಎಲ್ಲವನ್ನೂ ನೋಡಿ",
+                voiceTitle: "ನಾನು ಕೇಳುತ್ತಿದ್ದೇನೆ...", voiceSub: "ಹೇಳಿ: 'ಸಾಲ', 'ಮಂಡಿ ಬೆಲೆ', ಅಥವಾ 'ಟ್ರಾಕ್ಟರ್'", voiceCancel: "ರದ್ದುಮಾಡಿ",
+
+                s1Title: "ಮಂಡಿ ಬೆಲೆ", s1Desc: "ನೈಜ ಸಮಯದಲ್ಲಿ ಮಂಡಿ ದರಗಳು (ವಿಶ್ವ ಮತ್ತು ರಾಜ್ಯ).",
+                s2Title: "ನೇರ ಮಾರಾಟ", s2Desc: "ನಮ್ಮ ತಂಡ ಜಮೀನಿನಿಂದ ಸಂಗ್ರಹಿಸುತ್ತದೆ. ತಕ್ಷಣ ಹಣ.",
+                s3Title: "ಬೆಳೆ ಸಲಹೆ", s3Desc: "ಗರಿಷ್ಠ ಲಾಭಕ್ಕಾಗಿ ಏನು ಬೆಳೆಯಬೇಕೆಂದು ತಿಳಿಯಿರಿ.",
+                s4Title: "ಹವಾಮಾನ", s4Desc: "ನಿಖರ ಹವಾಮಾನ ವರದಿ. ಮಳೆ ಮುನ್ಸೂಚನೆ.",
+                s5Title: "ಕೂಲಿ ಸೇರಿ", s5Desc: "ಸ್ವತಂತ್ರವಾಗಿ ಕೆಲಸ ಮಾಡಿ. ತಂಡವನ್ನು ಸೇರಿ.",
+                s6Title: "ಉಪಕರಣ ಬಾಡಿಗೆ", s6Desc: "ಚಾಲಕರೊಂದಿಗೆ/ಇಲ್ಲದೆ ಟ್ರಾಕ್ಟರ್ ಬುಕ್ ಮಾಡಿ.",
+                s7Title: "ಬೋರ್‌ವೆಲ್ ಸೇವೆ", s7Desc: "ಹೊಸ ಕೊರೆಯುವಿಕೆ ಅಥವಾ ದುರಸ್ತಿ ನೇಮಕಾತಿ.",
+                s8Title: "ಕೃಷಿ ಅಂಗಡಿ", s8Desc: "IoT ಸಂವೇದಕಗಳು, ರಸಗೊಬ್ಬರ ಮತ್ತು ಬೀಜಗಳನ್ನು ಖರೀದಿಸಿ.",
+                s9Title: "ಸ್ಮಾರ್ಟ್ ನಿಯಂತ್ರಣ", s9Desc: "ಮೊಬೈಲ್ ಮೂಲಕ ಮೋಟಾರ್ ಆನ್/ಆಫ್ ಮಾಡಿ.",
+                s10Title: "ಕೆಸಿಸಿ ಸಾಲ", s10Desc: "KCC ಲಿಂಕ್ ಮಾಡಿ. ಬ್ಯಾಂಕ್‌ಗೆ ತ್ವರಿತ ಸಾಲ.",
+                s11Title: "ಮಣ್ಣು ಪರೀಕ್ಷೆ", s11Desc: "ಮನೆ ಸಂಗ್ರಹಣೆ. 24 ಗಂಟೆಗಳಲ್ಲಿ ವರದಿ.",
+                s12Title: "ಶೀತಲ ಉಗ್ರಾಣ", s12Desc: "ಬೆಲೆ ಕಡಿಮೆ ಇದೆಯೇ? ಹತ್ತಿರದ ಉಗ್ರಾಣದಲ್ಲಿ ಸಂಗ್ರಹಿಸಿ.",
+                s13Title: "ಪಶು ಮೇಳ", s13Desc: "ಜಾನುವಾರು ಮಾರಾಟ/ಖರೀದಿ. ವೈದ್ಯರ ಸಲಹೆ.",
+                s14Title: "ಗುತ್ತಿಗೆ ಕೃಷಿ", s14Desc: "ನಿಗದಿತ ಬೆಲೆಗೆ ಕಂಪನಿಗಳೊಂದಿಗೆ ಒಪ್ಪಂದ.",
+                s15Title: "ಬೆಳೆ ವಿಮೆ", s15Desc: "1-ಕ್ಲಿಕ್ ವಿಮೆ. ಪ್ರವಾಹ ಬಂದರೆ ಸ್ವಯಂ ಕ್ಲೈಮ್.",
+                s16Title: "ಸರ್ಕಾರಿ ಯೋಜನೆಗಳು", s16Desc: "ನಿಮಗಾಗಿ ರಾಜ್ಯ ಮತ್ತು ಕೇಂದ್ರದ ಸಬ್ಸಿಡಿಗಳು.",
+                s17Title: "ಸಾರಿಗೆ", s17Desc: "ಬೆಳೆ ಸಾಗಿಸಲು ಮಿನಿ-ಟ್ರಕ್ ಬುಕ್ ಮಾಡಿ.",
+                s18Title: "ಕಿಸಾನ್ ಚೌಪಾಲ್", s18Desc: "ಸಮುದಾಯ ವೇದಿಕೆ. ತಜ್ಞರಿಂದ ಉತ್ತರಗಳು.",
+                s19Title: "ಜಮೀನು ಗುತ್ತಿಗೆ", s19Desc: "ಜಮೀನು ಬಾಡಿಗೆಗೆ ನೀಡಿ ಅಥವಾ ಪಡೆಯಿರಿ.",
+                s20Title: "ವಿದ್ಯುತ್ ವೇಳಾಪಟ್ಟಿ", s20Desc: "ನಿಮ್ಮ ವಿದ್ಯುತ್ ವೇಳಾಪಟ್ಟಿಯನ್ನು ಪರಿಶೀಲಿಸಿ."
+            }
+        };
+
+        function setLang(l) {
+            // Update text content for UI elements
+            document.querySelectorAll('[data-i18n]').forEach(e => { 
+                if(i18n[l][e.getAttribute('data-i18n')]) e.textContent = i18n[l][e.getAttribute('data-i18n')]; 
+            });
+
+            // Update Search Placeholder
+            if(document.getElementById('service-search')) document.getElementById('service-search').placeholder = i18n[l]['searchPH'];
+            if(document.getElementById('mob-search')) document.getElementById('mob-search').placeholder = i18n[l]['searchPH'];
+            
+            // Update styles for Desktop & Mobile buttons
+            ['en','hi','kn'].forEach(x => { 
+                const isActive = x === l;
+                const activeClass = "px-3 py-1 rounded-full text-xs font-bold bg-white shadow text-brand transition-all";
+                const inactiveClass = "px-3 py-1 rounded-full text-xs font-bold text-slate-500 hover:text-brand transition-all";
+                const activeClassMob = "px-4 py-2 rounded-full text-xs font-bold bg-white shadow text-brand transition-all";
+                const inactiveClassMob = "px-4 py-2 rounded-full text-xs font-bold text-slate-500 hover:text-brand transition-all";
+
+                if(document.getElementById('btn-'+x)) document.getElementById('btn-'+x).className = isActive ? activeClass : inactiveClass;
+                if(document.getElementById('mob-btn-'+x)) document.getElementById('mob-btn-'+x).className = isActive ? activeClassMob : inactiveClassMob;
+            });
+            localStorage.lang = l;
+        }
+
+        // 6. VOICE ASSISTANT
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const voiceOverlay = document.getElementById('voice-overlay');
+        const voiceResult = document.getElementById('voice-result');
+        let recognition;
+        let currentLang = 'en-US';
+
+        const dictionary = {
+            'bhav': 'price', 'mandi': 'market', 'bechna': 'sell', 'kharidna': 'buy',
+            'paani': 'water', 'bijli': 'power', 'mausam': 'weather', 'barish': 'rain',
+            'khet': 'land', 'paisa': 'finance', 'udhar': 'loan', 'saala': 'loan',
+            'hana': 'finance', 'krishi': 'farm', 'mazdoor': 'labor', 'gadi': 'logistics'
+        };
+
+        if (SpeechRecognition) {
+            recognition = new SpeechRecognition();
+            recognition.continuous = false;
+            recognition.interimResults = true;
+
+            recognition.onstart = function() {
+                voiceOverlay.classList.remove('hidden');
+                voiceOverlay.classList.add('flex');
+                voiceResult.textContent = "Listening...";
+            };
+
+            recognition.onresult = function(event) {
+                let transcript = event.results[0][0].transcript.toLowerCase();
+                for (const [key, value] of Object.entries(dictionary)) {
+                    if (transcript.includes(key)) { transcript = value; break; }
+                }
+                voiceResult.textContent = transcript;
+                document.getElementById('service-search').value = transcript;
+                filterServices();
+            };
+
+            recognition.onend = function() { setTimeout(() => stopVoice(), 1500); };
+        }
+
+        function setVoiceLang(lang) {
+            currentLang = lang;
+            ['en','hi','kn'].forEach(l => {
+                document.getElementById('v-'+l).className = (('v-'+l).includes(lang.split('-')[0])) 
+                    ? "px-4 py-2 rounded-full text-sm font-bold bg-brand text-white transition-all shadow-lg" 
+                    : "px-4 py-2 rounded-full text-sm font-bold text-slate-400 hover:text-white transition-all";
+            });
+            if(!voiceOverlay.classList.contains('hidden')) {
+                recognition.stop();
+                setTimeout(startVoice, 200);
+            }
+        }
+
+        function startVoice() {
+            if(recognition) { recognition.lang = currentLang; recognition.start(); } 
+            else alert("Voice not supported. Try Chrome.");
+        }
+
+        function stopVoice() {
+            if(recognition) recognition.stop();
+            voiceOverlay.classList.add('hidden');
+            voiceOverlay.classList.remove('flex');
+        }
+
+        // Init Language
+        if(localStorage.lang) setLang(localStorage.lang);
+    </script>
+</body>
+</html>
