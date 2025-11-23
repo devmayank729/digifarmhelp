@@ -140,35 +140,10 @@
                     </button>
                 </div>
 
-                <button class="md:hidden text-slate-700 dark:text-white text-2xl" onclick="toggleMobileMenu()">
+                <button class="md:hidden text-slate-700 dark:text-white text-2xl" onclick="alert('Mobile Menu Open')">
                     <i class="fa-solid fa-bars"></i>
                 </button>
             </div>
-        </div>
-
-        <div id="mobile-menu" class="hidden md:hidden bg-white dark:bg-cardDark border-t border-slate-200 dark:border-slate-800 absolute w-full left-0 top-20 shadow-xl px-4 py-6 flex flex-col gap-6 animate-slide-in">
-            <div class="flex items-center justify-between">
-                <span class="text-sm font-bold text-slate-500 uppercase tracking-wider">Select Language</span>
-                <div class="flex items-center bg-slate-100 dark:bg-slate-800 rounded-full p-1 border border-slate-200 dark:border-slate-700">
-                    <button onclick="setLang('en')" id="mob-btn-en" class="px-4 py-2 rounded-full text-xs font-bold bg-white shadow text-brand transition-all">EN</button>
-                    <button onclick="setLang('hi')" id="mob-btn-hi" class="px-4 py-2 rounded-full text-xs font-bold text-slate-500 hover:text-brand transition-all">HI</button>
-                    <button onclick="setLang('kn')" id="mob-btn-kn" class="px-4 py-2 rounded-full text-xs font-bold text-slate-500 hover:text-brand transition-all">KN</button>
-                </div>
-            </div>
-
-            <div class="flex items-center justify-between">
-                <span class="text-sm font-bold text-slate-500 uppercase tracking-wider">Appearance</span>
-                <button onclick="toggleTheme()" class="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 px-4 py-2 rounded-full text-xs font-bold border border-slate-200 dark:border-slate-700">
-                    <i class="fa-solid fa-moon dark:hidden text-slate-600"></i>
-                    <i class="fa-solid fa-sun hidden dark:block text-yellow-400"></i>
-                    <span class="dark:hidden">Dark Mode</span>
-                    <span class="hidden dark:inline text-white">Light Mode</span>
-                </button>
-            </div>
-
-            <button class="w-full bg-brand hover:bg-brand-dark text-white py-3 rounded-xl font-bold shadow-lg flex items-center justify-center gap-2">
-                <span data-i18n="loginBtn">Login / Sign Up</span> <i class="fa-solid fa-arrow-right"></i>
-            </button>
         </div>
     </nav>
 
@@ -492,16 +467,10 @@
         }, { threshold: 0.1 });
         document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
 
-        // 4. MODAL & MOBILE MENU
+        // 4. MODAL
         function openSub() { document.getElementById('sub-modal').classList.remove('hidden'); document.getElementById('sub-modal').classList.add('flex'); }
         function closeSub() { document.getElementById('sub-modal').classList.add('hidden'); document.getElementById('sub-modal').classList.remove('flex'); }
         function activateVoice() { alert("🎤 Voice Search Active..."); }
-        
-        // NEW: Toggle Mobile Menu
-        function toggleMobileMenu() {
-            const menu = document.getElementById('mobile-menu');
-            menu.classList.toggle('hidden');
-        }
 
         // 5. TRANSLATION ENGINE
         const i18n = {
@@ -532,29 +501,8 @@
         };
 
         function setLang(l) {
-            // Update text content
             document.querySelectorAll('[data-i18n]').forEach(e => { if(i18n[l][e.getAttribute('data-i18n')]) e.textContent = i18n[l][e.getAttribute('data-i18n')]; });
-            
-            // Update styles for BOTH Desktop and Mobile buttons
-            ['en','hi','kn'].forEach(x => { 
-                const isActive = x === l;
-                const activeClass = "px-3 py-1 rounded-full text-xs font-bold bg-white shadow text-brand transition-all";
-                const inactiveClass = "px-3 py-1 rounded-full text-xs font-bold text-slate-500 hover:text-brand transition-all";
-                
-                // Mobile buttons are slightly larger (px-4 py-2)
-                const activeClassMob = "px-4 py-2 rounded-full text-xs font-bold bg-white shadow text-brand transition-all";
-                const inactiveClassMob = "px-4 py-2 rounded-full text-xs font-bold text-slate-500 hover:text-brand transition-all";
-
-                // Update Desktop Buttons
-                if(document.getElementById('btn-'+x)) {
-                    document.getElementById('btn-'+x).className = isActive ? activeClass : inactiveClass;
-                }
-                
-                // Update Mobile Buttons
-                if(document.getElementById('mob-btn-'+x)) {
-                    document.getElementById('mob-btn-'+x).className = isActive ? activeClassMob : inactiveClassMob;
-                }
-            });
+            ['en','hi','kn'].forEach(x => { document.getElementById('btn-'+x).className = x===l ? "px-3 py-1 rounded-full text-xs font-bold bg-white shadow text-brand transition-all" : "px-3 py-1 rounded-full text-xs font-bold text-slate-500 hover:text-brand transition-all"; });
             localStorage.lang = l;
         }
         if(localStorage.lang) setLang(localStorage.lang);
