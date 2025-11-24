@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digi Farm Help | Smart Farming Solutions</title>
+    <!-- Fonts: Poppins for Headings, Inter for Body -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+    <style>
+        /* --- XCEEDJS Style Guide --- */
+        :root {
+            --primary: #6C2BD9;       /* Brand Purple */
+            --primary-hover: #5b21b6;
+            --accent: #16A34A;        /* Action Green */
+            --accent-hover: #15803d;
+            --text-dark: #1F2937;     /* Headings */
+            --text-body: #4B5563;     /* Body */
+            --bg-light: #F9FAFB;      /* Background */
+            --border: #E5E7EB;
+            --white: #FFFFFF;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            color: var(--text-body);
+            background-color: var(--bg-light);
+            line-height: 1.6;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Poppins', sans-serif;
+            color: var(--text-dark);
+            font-weight: 700;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+            transition: color 0.3s ease;
+        }
+
+        /* --- Navigation --- */
+        header {
+            background-color: var(--white);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            letter-spacing: -0.5px;
+        }
+
+        .logo span {
+            color: var(--accent);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .nav-btn {
+            background: none;
+            border: none;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+            font-size: 1rem;
+            color: var(--text-dark);
+            cursor: pointer;
+            padding: 0.5rem;
+            position: relative;
+        }
+
+        .nav-btn:hover, .nav-btn.active {
+            color: var(--primary);
+        }
+
+        .nav-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background-color: var(--accent);
+            border-radius: 2px;
+        }
+
+        /* --- Mobile Menu Button --- */
+        .mobile-menu-btn {
+            display: none;
+            font-size: 1.5rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--text-dark);
+        }
+
+        /* --- Page Sections --- */
+        .page-section {
+            display: none; /* Hidden by default */
+            animation: fadeIn 0.4s ease-in-out;
+            flex: 1;
+        }
+
+        .page-section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+
+        /* --- Buttons --- */
+        .btn {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Poppins', sans-serif;
+            border: none;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: var(--white);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+            transform: translateY(-2px);
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+            margin-left: 10px;
+        }
+
+        .btn-outline:hover {
+            background-color: var(--primary);
+            color: var(--white);
+        }
+
+        /* --- PAGE 1: HOME --- */
+        .hero {
+            display: flex;
+            align-items: center;
+            gap: 3rem;
+            padding: 4rem 0;
+        }
+
+        .hero-text {
+            flex: 1;
+        }
+
+        .hero-text h1 {
+            font-size: 3rem;
+            line-height: 1.2;
+            margin-bottom: 1.5rem;
+        }
+
+        .hero-text span {
+            color: var(--accent);
+        }
+
+        .hero-text p {
+            font-size: 1.125rem;
+            margin-bottom: 2rem;
+            color: var(--text-body);
+        }
+
+        .hero-image {
+            flex: 1;
+            position: relative;
+        }
+
+        .hero-image img {
+            width: 100%;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(108, 43, 217, 0.15);
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .feature-card {
+            background: var(--white);
+            padding: 2rem;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            text-align: center;
+            transition: transform 0.3s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary);
+        }
+
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: var(--primary);
+        }
+
+        /* --- PAGE 2: SERVICES --- */
+        .services-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .services-header h2 {
+            font-size: 2.5rem;
+            color: var(--primary);
+        }
+
+        .service-row {
+            display: flex;
+            align-items: center;
+            gap: 3rem;
+            margin-bottom: 4rem;
+            background: var(--white);
+            padding: 2rem;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+
+        .service-row:nth-child(even) {
+            flex-direction: row-reverse;
+        }
+
+        .service-img img {
+            width: 100%;
+            max-width: 400px;
+            border-radius: 8px;
+            object-fit: cover;
+            height: 250px;
+        }
+
+        .service-content {
+            flex: 1;
+        }
+
+        .service-content h3 {
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+            color: var(--text-dark);
+        }
+
+        /* --- PAGE 3: CONTACT --- */
+        .contact-wrapper {
+            display: flex;
+            gap: 3rem;
+            background: var(--white);
+            padding: 3rem;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+        }
+
+        .contact-info {
+            flex: 1;
+            border-right: 1px solid var(--border);
+            padding-right: 2rem;
+        }
+
+        .contact-form {
+            flex: 1.5;
+        }
+
+        .info-item {
+            margin-bottom: 2rem;
+        }
+
+        .info-item h4 {
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+            font-size: 1.2rem;
+        }
+
+        .info-item p, .info-item a {
+            font-size: 1.1rem;
+            color: var(--text-body);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
+        }
+
+        .form-group input:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(108, 43, 217, 0.1);
+        }
+
+        /* --- Footer --- */
+        footer {
+            background-color: var(--text-dark);
+            color: var(--white);
+            padding: 3rem 1.5rem;
+            margin-top: auto;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 2rem;
+        }
+
+        .footer-logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            font-family: 'Poppins', sans-serif;
+            margin-bottom: 1rem;
+        }
+
+        .footer-links a {
+            color: #D1D5DB;
+            margin-right: 1.5rem;
+        }
+
+        .footer-links a:hover {
+            color: var(--accent);
+        }
+
+        .copy {
+            text-align: center;
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid #374151;
+            color: #9CA3AF;
+            font-size: 0.9rem;
+        }
+
+        /* --- Responsive --- */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none; /* Hide for simple basic version or add hamburger logic */
+            }
+            .mobile-menu-btn { display: block; }
+            
+            /* Simple mobile nav for basic version */
+            .nav-container { flex-direction: column; gap: 1rem; }
+            .nav-links { display: flex; width: 100%; justify-content: space-between; font-size: 0.9rem; }
+            .nav-btn { padding: 0.5rem 0; }
+            .mobile-menu-btn { display: none; } /* Overriding for simplicity */
+
+            .hero { flex-direction: column; text-align: center; padding: 2rem 0; }
+            .service-row, .service-row:nth-child(even) { flex-direction: column; }
+            .contact-wrapper { flex-direction: column; padding: 1.5rem; }
+            .contact-info { border-right: none; border-bottom: 1px solid var(--border); padding-bottom: 2rem; margin-bottom: 2rem; }
+            .hero-text h1 { font-size: 2.2rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navigation -->
+    <header>
+        <div class="nav-container">
+            <div class="logo">Digi<span>Farm</span></div>
+            <nav class="nav-links">
+                <button class="nav-btn active" onclick="showPage('home')">Home</button>
+                <button class="nav-btn" onclick="showPage('services')">Services</button>
+                <button class="nav-btn" onclick="showPage('contact')">Contact</button>
+            </nav>
+            <button class="mobile-menu-btn">☰</button>
+        </div>
+    </header>
+
+    <div id="app">
+
+        <!-- PAGE 1: HOME -->
+        <section id="home" class="page-section active">
+            <div class="container">
+                <div class="hero">
+                    <div class="hero-text">
+                        <h1>Farming for the <br><span>Digital Age</span></h1>
+                        <p>Empowering farmers with technology. Get soil analysis, market connections, and expert advice directly on your device.</p>
+                        <button class="btn btn-primary" onclick="showPage('services')">Our Services</button>
+                        <button class="btn btn-outline" onclick="showPage('contact')">Get Help</button>
+                    </div>
+                    <div class="hero-image">
+                        <!-- REPLACE: farm-hero.jpg -->
+                        <img src="farm-hero.jpg" alt="Farmer using digital tablet" onerror="this.src='https://placehold.co/600x400/6C2BD9/FFF?text=Farm+Hero+Image';">
+                    </div>
+                </div>
+
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">🌱</div>
+                        <h3>Soil Testing</h3>
+                        <p>Accurate soil analysis to maximize your crop yield and health.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🚜</div>
+                        <h3>Modern Tools</h3>
+                        <p>Access to modern farming equipment and rental services.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">📈</div>
+                        <h3>Market Access</h3>
+                        <p>Connect directly with buyers and get the best prices for your produce.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- PAGE 2: SERVICES (ABOUT) -->
+        <section id="services" class="page-section">
+            <div class="container">
+                <div class="services-header">
+                    <h2>Our Services</h2>
+                    <p>Comprehensive solutions for the modern farmer.</p>
+                </div>
+
+                <!-- Service 1 -->
+                <div class="service-row">
+                    <div class="service-img">
+                        <!-- REPLACE: service-soil.jpg -->
+                        <img src="service-soil.jpg" alt="Soil Testing" onerror="this.src='https://placehold.co/500x300/16A34A/FFF?text=Soil+Testing';">
+                    </div>
+                    <div class="service-content">
+                        <h3>Smart Soil Analysis</h3>
+                        <p>We use advanced sensors to test soil pH and nutrient levels. This data helps you choose the right fertilizers and crops for your specific land conditions.</p>
+                    </div>
+                </div>
+
+                <!-- Service 2 -->
+                <div class="service-row">
+                    <div class="service-img">
+                        <!-- REPLACE: service-market.jpg -->
+                        <img src="service-market.jpg" alt="Market Connection" onerror="this.src='https://placehold.co/500x300/6C2BD9/FFF?text=Market+Access';">
+                    </div>
+                    <div class="service-content">
+                        <h3>Direct Market Connect</h3>
+                        <p>Skip the middleman. Our platform connects you directly with wholesalers and retailers, ensuring you get paid fair market rates instantly.</p>
+                    </div>
+                </div>
+
+                <!-- Service 3 -->
+                <div class="service-row">
+                    <div class="service-img">
+                        <!-- REPLACE: service-drone.jpg -->
+                        <img src="service-drone.jpg" alt="Drone Technology" onerror="this.src='https://placehold.co/500x300/1F2937/FFF?text=Drone+Tech';">
+                    </div>
+                    <div class="service-content">
+                        <h3>Drone Assistance</h3>
+                        <p> Utilize our drone services for crop monitoring and precision spraying, saving you time and reducing chemical usage.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- PAGE 3: CONTACT -->
+        <section id="contact" class="page-section">
+            <div class="container">
+                <div class="services-header">
+                    <h2>Contact Us</h2>
+                    <!-- <p>Have questions? Reach out to the XCEEDJS team.</p> -->
+                </div>
+
+                <div class="contact-wrapper">
+                    <div class="contact-info">
+                        <div class="info-item">
+                            <h4>WhatsApp & Phone</h4>
+                            <p>90243 91398</p>
+                        </div>
+                        <div class="info-item">
+                            <h4>Email</h4>
+                            <!-- <p>Xceedjs@gmail.com</p> -->
+                        </div>
+                        <div class="info-item">
+                            <h4>Website</h4>
+                            <!-- <a href="https://xceedjs.com" target="_blank">www.xceedjs.com</a> -->
+                        </div>
+                        <div class="info-item">
+                            <h4>Location</h4>
+                            <p>Bangalore, India</p>
+                        </div>
+                    </div>
+
+                    <div class="contact-form">
+                        <form onsubmit="event.preventDefault(); alert('Thank you! We will contact you on WhatsApp.');">
+                            <div class="form-group">
+                                <label>Your Name</label>
+                                <input type="text" placeholder="John Doe" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Phone Number</label>
+                                <input type="tel" placeholder="+91 90243 91398" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Message</label>
+                                <textarea rows="5" placeholder="I need help with soil testing..."></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary" style="width: 100%;">Send Message</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <div>
+                <div class="footer-logo">DigiFarm</div>
+                <p style="color: #9CA3AF; max-width: 300px;">Helping farmers grow better, faster, and smarter with digital tools.</p>
+            </div>
+            <div>
+                <h4 style="color:white; margin-bottom:1rem;">Quick Links</h4>
+                <div class="footer-links">
+                    <a href="#" onclick="showPage('home')">Home</a>
+                    <a href="#" onclick="showPage('services')">Services</a>
+                    <a href="#" onclick="showPage('contact')">Contact</a>
+                </div>
+            </div>
+        </div>
+        <div class="copy">
+            <!-- &copy; 2025 DigiFarm Help. Designed by <a href="https://xceedjs.com" style="color:var(--accent); text-decoration:none;">XCEEDJS</a>. -->
+        </div>
+    </footer>
+
+    <!-- JavaScript for Basic SPA Routing -->
+    <script>
+        function showPage(pageId) {
+            // 1. Hide all sections
+            const sections = document.querySelectorAll('.page-section');
+            sections.forEach(section => {
+                section.classList.remove('active');
+            });
+
+            // 2. Remove active class from nav buttons
+            const navBtns = document.querySelectorAll('.nav-btn');
+            navBtns.forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            // 3. Show selected section
+            document.getElementById(pageId).classList.add('active');
+
+            // 4. Highlight current nav button (simple matching)
+            // Note: This matches the button text/onclick context
+            const activeBtn = Array.from(navBtns).find(btn => btn.getAttribute('onclick').includes(pageId));
+            if(activeBtn) activeBtn.classList.add('active');
+
+            // 5. Scroll to top
+            window.scrollTo(0, 0);
+        }
+    </script>
+</body>
+</html>
